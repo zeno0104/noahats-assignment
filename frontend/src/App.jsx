@@ -124,7 +124,7 @@ function App() {
           ))}
         </nav>
 
-        <main className="app-main">
+        <main className="app-main my-sub">
           {loading ? (
             <div className="loading">
               <div className="spinner" />

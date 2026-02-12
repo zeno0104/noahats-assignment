@@ -169,6 +169,7 @@ body {
   padding: 0.75rem 0 0;
   border-bottom: 1px solid var(--border);
   margin-bottom: 1.5rem;
+  justify-content: center;
 }
 
 .tab-btn {
@@ -210,8 +211,12 @@ body {
 .app-main {
   flex: 1;
   padding-bottom: 3rem;
+  justify-content: center;
 }
-
+.my-sub {
+  display: flex;
+  flex-direction: column;
+}
 /* ============ Page Headers ============ */
 .page-top {
   display: flex;
