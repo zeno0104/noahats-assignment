@@ -1,110 +1,170 @@
-import React, { useEffect, useState } from "react";
-import "./App.css";
-import axios from "./api/axios";
-import SubscriptionForm from "./components/SubscriptionForm";
+import { useState, useEffect, useCallback } from "react";
+import Dashboard from "./components/Dashboard";
 import SubscriptionList from "./components/SubscriptionList";
+import SubscriptionForm from "./components/SubscriptionForm";
+import ROIAnalysis from "./components/ROIAnalysis";
+import ShareSimulator from "./components/ShareSimulator";
+import "./App.css";
+
+const API_BASE = "http://localhost:8080/api/subscriptions";
 
 function App() {
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [subscriptions, setSubscriptions] = useState([]);
-  const [exchangeRate, setExchangeRate] = useState(1450);
+  const [analyses, setAnalyses] = useState([]);
+  const [dashboard, setDashboard] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchSubscriptions();
-    fetchExchangeRate();
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [subRes, analysisRes, dashRes] = await Promise.all([
+        fetch(API_BASE),
+        fetch(`${API_BASE}/analysis`),
+        fetch(`${API_BASE}/dashboard`),
+      ]);
+      setSubscriptions(await subRes.json());
+      setAnalyses(await analysisRes.json());
+      setDashboard(await dashRes.json());
+    } catch (err) {
+      console.error("데이터 로드 실패:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const fetchExchangeRate = async () => {
-    try {
-      const res = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
-      const data = await res.json();
-      setExchangeRate(data.rates.KRW);
-    } catch (error) {
-      console.error("환율 로드 실패", error);
-    }
-  };
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  const fetchSubscriptions = async () => {
+  const handleSave = async (subscription) => {
     try {
-      const response = await axios.get("/subscriptions");
-      setSubscriptions(response.data.sort((a, b) => b.id - a.id));
-    } catch (error) {
-      console.error("데이터 로드 실패", error);
-    }
-  };
-
-  const handleAdd = async (data) => {
-    try {
-      await axios.post("/subscriptions", data);
-      await fetchSubscriptions();
-    } catch (error) {
-      alert("추가 실패!");
-    }
-  };
-
-  const handleUpdate = async (id, updatedData) => {
-    try {
-      await axios.put(`/subscriptions/${id}`, updatedData);
-      await fetchSubscriptions();
-    } catch (error) {
-      alert("수정 실패!");
+      if (editingItem) {
+        await fetch(`${API_BASE}/${editingItem.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(subscription),
+        });
+      } else {
+        await fetch(API_BASE, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(subscription),
+        });
+      }
+      setShowForm(false);
+      setEditingItem(null);
+      await fetchData();
+    } catch (err) {
+      console.error("저장 실패:", err);
     }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
-      await axios.delete(`/subscriptions/${id}`);
-      await fetchSubscriptions();
-    } catch (error) {
-      alert("삭제 실패!");
+      await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
+      await fetchData();
+    } catch (err) {
+      console.error("삭제 실패:", err);
     }
   };
 
-  const totalMonthlyCostKrw = subscriptions.reduce((acc, cur) => {
-    let costKrw = cur.cost;
-    if (cur.currency === "USD") costKrw = cur.cost * exchangeRate;
-    // 내가 내는 몫(N빵)만 합산
-    costKrw = costKrw / (cur.sharedCount || 1);
-    if (cur.billingCycle === "YEARLY") costKrw = costKrw / 12;
-    return acc + costKrw;
-  }, 0);
+  const handleEdit = (subscription) => {
+    setEditingItem(subscription);
+    setShowForm(true);
+  };
+
+  const tabs = [
+    { id: "dashboard", label: "대시보드", icon: "📊" },
+    { id: "subscriptions", label: "내 구독", icon: "📋" },
+    { id: "analysis", label: "ROI 분석", icon: "🔍" },
+    { id: "share", label: "공유 최적화", icon: "👥" },
+  ];
 
   return (
-    <div className="app-container">
-      <header>
-        <h1>
-          📊 구독 가성비 판독기{" "}
-          <span style={{ fontSize: "0.6em", color: "#a29bfe" }}>
-            (ROI Analyzer)
-          </span>
-        </h1>
-        <div className="summary-banner">
-          <p>이번 달 나의 실질 구독료</p>
-          <h2>₩ {Math.round(totalMonthlyCostKrw).toLocaleString()}</h2>
-          <span className="rate-info">
-            USD: ₩{exchangeRate.toLocaleString()}
-          </span>
+    <div className="app">
+      <header className="app-header">
+        <div className="header-content">
+          <h1 className="app-title">
+            <span className="title-icon">💰</span>
+            SubScope
+          </h1>
+          <p className="app-subtitle">
+            내 구독, 이득인지 손해인지 숫자로 증명합니다
+          </p>
         </div>
       </header>
 
-      <main>
-        <section className="left-panel">
-          <SubscriptionForm onAdd={handleAdd} />
-        </section>
+      <nav className="tab-nav">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`tab-btn ${activeTab === tab.id ? "active" : ""}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            <span className="tab-icon">{tab.icon}</span>
+            <span className="tab-label">{tab.label}</span>
+          </button>
+        ))}
+      </nav>
 
-        <section className="right-panel">
-          <h2 style={{ borderBottom: "2px solid #eee", paddingBottom: "10px" }}>
-            분석 리포트{" "}
-            <span style={{ color: "#6c5ce7" }}>({subscriptions.length})</span>
-          </h2>
-          <SubscriptionList
-            subscriptions={subscriptions}
-            onDelete={handleDelete}
-            onUpdate={handleUpdate}
-            exchangeRate={exchangeRate}
-          />
-        </section>
+      <main className="app-main">
+        {loading ? (
+          <div className="loading">데이터를 불러오는 중...</div>
+        ) : (
+          <>
+            {activeTab === "dashboard" && (
+              <Dashboard dashboard={dashboard} analyses={analyses} />
+            )}
+
+            {activeTab === "subscriptions" && (
+              <div className="subscriptions-page">
+                <div className="page-header">
+                  <h2>내 구독 목록</h2>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      setEditingItem(null);
+                      setShowForm(true);
+                    }}
+                  >
+                    + 구독 추가
+                  </button>
+                </div>
+
+                {showForm && (
+                  <SubscriptionForm
+                    initialData={editingItem}
+                    onSave={handleSave}
+                    onCancel={() => {
+                      setShowForm(false);
+                      setEditingItem(null);
+                    }}
+                  />
+                )}
+
+                <SubscriptionList
+                  subscriptions={subscriptions}
+                  analyses={analyses}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              </div>
+            )}
+
+            {activeTab === "analysis" && <ROIAnalysis analyses={analyses} />}
+
+            {activeTab === "share" && <ShareSimulator analyses={analyses} />}
+          </>
+        )}
       </main>
+
+      <footer className="app-footer">
+        <p>SubScope — 구독 ROI 판독기 | 노아에이티에스 사전과제</p>
+      </footer>
     </div>
   );
 }
