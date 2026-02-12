@@ -1,56 +1,64 @@
 import { useMemo } from "react";
 
-function ROIAnalysis({ analyses }) {
-  const sorted = useMemo(() => {
-    return [...analyses].sort((a, b) => {
-      const order = { RED: 0, YELLOW: 1, GREEN: 2 };
-      return (order[a.signal] || 3) - (order[b.signal] || 3);
-    });
-  }, [analyses]);
+const SIG = {
+  GREEN: { emoji: "🟢", label: "유지", cls: "green" },
+  YELLOW: { emoji: "🟡", label: "공유 권장", cls: "amber" },
+  RED: { emoji: "🔴", label: "해지 권장", cls: "red" },
+};
 
-  const totalMonthly = analyses.reduce((sum, a) => sum + a.monthlyPrice, 0);
+export default function ROIAnalysis({ analyses }) {
+  const sorted = useMemo(
+    () =>
+      [...analyses].sort((a, b) => {
+        const o = { RED: 0, YELLOW: 1, GREEN: 2 };
+        return (o[a.signal] ?? 3) - (o[b.signal] ?? 3);
+      }),
+    [analyses]
+  );
+
+  const totalMonthly = analyses.reduce((s, a) => s + a.monthlyPrice, 0);
   const wastedMonthly = analyses
     .filter((a) => a.signal === "RED")
-    .reduce((sum, a) => sum + a.monthlyPrice, 0);
+    .reduce((s, a) => s + a.monthlyPrice, 0);
 
   if (analyses.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-icon">🔍</div>
-        <p>분석할 구독이 없습니다.</p>
-        <p className="empty-sub">"내 구독" 탭에서 구독을 추가해주세요.</p>
+      <div className="empty">
+        <div className="empty-icon">⚡</div>
+        <p>분석할 구독이 없습니다</p>
+        <p className="sub-text">"내 구독" 탭에서 추가해주세요</p>
       </div>
     );
   }
 
   return (
-    <div className="roi-analysis">
-      <div className="page-header">
-        <h2>ROI 분석 리포트</h2>
-        <p className="page-desc">
-          각 구독이 시장 대안 대비 이득인지 손해인지 분석합니다
-        </p>
+    <div>
+      <div className="page-top">
+        <div>
+          <h2 className="page-title">가성비 분석 리포트</h2>
+          <p className="page-desc">
+            각 구독이 시장 대안 대비 이득인지 손해인지, 점수로 보여드립니다
+          </p>
+        </div>
       </div>
 
-      {/* 요약 경고 */}
       {wastedMonthly > 0 && (
-        <div className="roi-alert">
-          <div className="roi-alert-icon">🚨</div>
-          <div className="roi-alert-content">
+        <div className="analysis-alert">
+          <div className="analysis-alert-icon">🚨</div>
+          <div className="analysis-alert-text">
             <strong>
               월 {wastedMonthly.toLocaleString()}원이 낭비되고 있습니다
             </strong>
             <p>
               전체 구독비의 {Math.round((wastedMonthly / totalMonthly) * 100)}
-              %가 해지 권장 항목입니다. 연간{" "}
-              {(wastedMonthly * 12).toLocaleString()}원을 아낄 수 있습니다.
+              %가 해지 권장 항목입니다. 지금 정리하면 연간{" "}
+              {(wastedMonthly * 12).toLocaleString()}원을 아낄 수 있어요.
             </p>
           </div>
         </div>
       )}
 
-      {/* 분석 카드들 */}
-      <div className="analysis-cards">
+      <div className="analysis-list">
         {sorted.map((item) => (
           <AnalysisCard key={item.id} item={item} />
         ))}
@@ -60,72 +68,53 @@ function ROIAnalysis({ analyses }) {
 }
 
 function AnalysisCard({ item }) {
-  const signalConfig = {
-    GREEN: { emoji: "🟢", label: "유지", className: "green", bg: "#f0fdf4" },
-    YELLOW: {
-      emoji: "🟡",
-      label: "공유 권장",
-      className: "yellow",
-      bg: "#fefce8",
-    },
-    RED: { emoji: "🔴", label: "해지 권장", className: "red", bg: "#fef2f2" },
-  };
-
-  const config = signalConfig[item.signal] || signalConfig.RED;
+  const sig = SIG[item.signal] || SIG.RED;
   const share = item.shareSimulation;
-
-  // ROI 게이지 계산 (-100 ~ 100 범위로 정규화)
-  const gaugeWidth = Math.min(Math.max(item.roi, -100), 100);
+  const gaugeW = Math.min(Math.max(item.roi, -100), 100);
 
   return (
-    <div
-      className="analysis-card"
-      style={{ borderLeftColor: `var(--color-${config.className})` }}
-    >
-      <div className="analysis-card-header">
-        <div className="analysis-title">
-          <span className="analysis-signal">{config.emoji}</span>
+    <div className={`analysis-card signal-${sig.cls}`}>
+      <div className="analysis-top">
+        <div className="analysis-name">
+          <span>{sig.emoji}</span>
           <div>
             <h4>{item.name}</h4>
-            <span className="sub-category-badge">{item.category}</span>
+            <span className="badge badge-cat">{item.category}</span>
           </div>
         </div>
-        <div className={`analysis-verdict badge-${config.className}`}>
-          {config.label}
-        </div>
+        <span className={`badge badge-signal badge-${sig.cls}`}>
+          {sig.label}
+        </span>
       </div>
 
-      {/* ROI 게이지 */}
-      <div className="roi-gauge-section">
-        <div className="roi-gauge-labels">
+      {/* 가성비 점수 게이지 */}
+      <div className="score-section">
+        <div className="score-labels">
           <span>손해</span>
-          <span
-            className="roi-gauge-value"
-            style={{ color: `var(--color-${config.className})` }}
-          >
-            ROI {item.roi > 0 ? "+" : ""}
+          <span className={`score-value ${sig.cls}`}>
+            가성비 점수 {item.roi > 0 ? "+" : ""}
             {item.roi}%
           </span>
           <span>이득</span>
         </div>
-        <div className="roi-gauge-track">
-          <div className="roi-gauge-center"></div>
-          {gaugeWidth >= 0 ? (
+        <div className="score-track">
+          <div className="score-track-center"></div>
+          {gaugeW >= 0 ? (
             <div
-              className="roi-gauge-fill roi-gauge-positive"
-              style={{ width: `${gaugeWidth / 2}%`, left: "50%" }}
+              className="score-fill positive"
+              style={{ width: `${gaugeW / 2}%` }}
             ></div>
           ) : (
             <div
-              className="roi-gauge-fill roi-gauge-negative"
-              style={{ width: `${Math.abs(gaugeWidth) / 2}%`, right: "50%" }}
+              className="score-fill negative"
+              style={{ width: `${Math.abs(gaugeW) / 2}%` }}
             ></div>
           )}
         </div>
       </div>
 
-      {/* 비용 분석 상세 */}
-      <div className="analysis-details">
+      {/* 상세 수치 */}
+      <div className="detail-rows">
         <div className="detail-row">
           <span>월 구독료</span>
           <strong>{item.monthlyPrice.toLocaleString()}원</strong>
@@ -153,9 +142,9 @@ function AnalysisCard({ item }) {
             )}
           </>
         ) : (
-          <div className="detail-row highlight text-red">
+          <div className="detail-row highlight">
             <span>사용 기록</span>
-            <strong>없음 — 구독료 전액 낭비</strong>
+            <strong className="red">없음 — 구독료 전액 낭비</strong>
           </div>
         )}
         <div className="detail-row">
@@ -164,36 +153,27 @@ function AnalysisCard({ item }) {
         </div>
       </div>
 
-      {/* 공유 최적화 제안 */}
+      {/* 공유 제안 */}
       {share?.available && share.currentUsers === 1 && (
-        <div className="share-suggestion">
-          <div className="share-suggestion-header">💡 공유하면?</div>
-          <div className="share-suggestion-body">
-            <p>
-              <strong>{share.maxUsers}명</strong> 공유 시 월{" "}
-              <strong className="text-green">
-                {share.sharedMonthlyPrice?.toLocaleString()}원
-              </strong>{" "}
-              (현재 대비{" "}
-              <strong className="text-green">
-                월 {share.monthlySavings?.toLocaleString()}원 절약
-              </strong>
-              )
-            </p>
-            <p className="share-annual">
-              → 연간 <strong>{share.annualSavings?.toLocaleString()}원</strong>{" "}
-              절감 가능
-            </p>
-          </div>
+        <div className="share-tip">
+          <div className="share-tip-title">💡 공유하면?</div>
+          <p>
+            <strong>{share.maxUsers}명</strong> 공유 시 월{" "}
+            <strong className="green">
+              {share.sharedMonthlyPrice?.toLocaleString()}원
+            </strong>{" "}
+            · 월{" "}
+            <strong className="green">
+              {share.monthlySavings?.toLocaleString()}원 절약
+            </strong>
+          </p>
+          <p className="annual">
+            → 연간 {share.annualSavings?.toLocaleString()}원 절감
+          </p>
         </div>
       )}
 
-      {/* 판정 메시지 */}
-      <div className={`analysis-verdict-msg verdict-${config.className}`}>
-        {item.verdict}
-      </div>
+      <div className={`verdict-box ${sig.cls}`}>{item.verdict}</div>
     </div>
   );
 }
-
-export default ROIAnalysis;

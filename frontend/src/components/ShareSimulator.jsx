@@ -1,199 +1,201 @@
 import { useMemo } from "react";
 
-function ROIAnalysis({ analyses }) {
-  const sorted = useMemo(() => {
-    return [...analyses].sort((a, b) => {
-      const order = { RED: 0, YELLOW: 1, GREEN: 2 };
-      return (order[a.signal] || 3) - (order[b.signal] || 3);
-    });
-  }, [analyses]);
+export default function ShareSimulator({ analyses }) {
+  const shareable = useMemo(
+    () =>
+      analyses.filter(
+        (a) =>
+          a.shareSimulation?.available &&
+          a.shareSimulation.currentUsers < a.shareSimulation.maxUsers
+      ),
+    [analyses]
+  );
 
-  const totalMonthly = analyses.reduce((sum, a) => sum + a.monthlyPrice, 0);
-  const wastedMonthly = analyses
-    .filter((a) => a.signal === "RED")
-    .reduce((sum, a) => sum + a.monthlyPrice, 0);
+  const totalMonthly = shareable.reduce(
+    (s, a) => s + (a.shareSimulation?.monthlySavings || 0),
+    0
+  );
+  const totalAnnual = totalMonthly * 12;
+
+  const funItems = useMemo(() => {
+    const list = [
+      { name: "치킨", price: 22000, emoji: "🍗" },
+      { name: "아메리카노", price: 4500, emoji: "☕" },
+      { name: "영화 관람", price: 15000, emoji: "🎬" },
+      { name: "점심 한 끼", price: 10000, emoji: "🍱" },
+      { name: "택시 (5km)", price: 8000, emoji: "🚕" },
+    ];
+    return list
+      .map((it) => ({ ...it, count: Math.floor(totalAnnual / it.price) }))
+      .filter((it) => it.count > 0);
+  }, [totalAnnual]);
 
   if (analyses.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-icon">🔍</div>
-        <p>분석할 구독이 없습니다.</p>
-        <p className="empty-sub">"내 구독" 탭에서 구독을 추가해주세요.</p>
+      <div className="empty">
+        <div className="empty-icon">👥</div>
+        <p>분석할 구독이 없습니다</p>
       </div>
     );
   }
 
-  return (
-    <div className="roi-analysis">
-      <div className="page-header">
-        <h2>ROI 분석 리포트</h2>
-        <p className="page-desc">
-          각 구독이 시장 대안 대비 이득인지 손해인지 분석합니다
-        </p>
-      </div>
-
-      {/* 요약 경고 */}
-      {wastedMonthly > 0 && (
-        <div className="roi-alert">
-          <div className="roi-alert-icon">🚨</div>
-          <div className="roi-alert-content">
-            <strong>
-              월 {wastedMonthly.toLocaleString()}원이 낭비되고 있습니다
-            </strong>
-            <p>
-              전체 구독비의 {Math.round((wastedMonthly / totalMonthly) * 100)}
-              %가 해지 권장 항목입니다. 연간{" "}
-              {(wastedMonthly * 12).toLocaleString()}원을 아낄 수 있습니다.
+  if (shareable.length === 0) {
+    return (
+      <>
+        <div className="page-top">
+          <div>
+            <h2 className="page-title">공유 절약 시뮬레이터</h2>
+            <p className="page-desc">
+              혼자 쓰는 구독을 공유하면 얼마를 아끼는지 계산합니다
             </p>
           </div>
         </div>
-      )}
-
-      {/* 분석 카드들 */}
-      <div className="analysis-cards">
-        {sorted.map((item) => (
-          <AnalysisCard key={item.id} item={item} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function AnalysisCard({ item }) {
-  const signalConfig = {
-    GREEN: { emoji: "🟢", label: "유지", className: "green", bg: "#f0fdf4" },
-    YELLOW: {
-      emoji: "🟡",
-      label: "공유 권장",
-      className: "yellow",
-      bg: "#fefce8",
-    },
-    RED: { emoji: "🔴", label: "해지 권장", className: "red", bg: "#fef2f2" },
-  };
-
-  const config = signalConfig[item.signal] || signalConfig.RED;
-  const share = item.shareSimulation;
-
-  // ROI 게이지 계산 (-100 ~ 100 범위로 정규화)
-  const gaugeWidth = Math.min(Math.max(item.roi, -100), 100);
+        <div className="empty">
+          <div className="empty-icon">✅</div>
+          <p>공유 최적화 가능한 구독이 없습니다</p>
+          <p className="sub-text">
+            이미 모두 공유 중이거나, 공유 요금제가 없는 서비스입니다
+          </p>
+        </div>
+      </>
+    );
+  }
 
   return (
-    <div
-      className="analysis-card"
-      style={{ borderLeftColor: `var(--color-${config.className})` }}
-    >
-      <div className="analysis-card-header">
-        <div className="analysis-title">
-          <span className="analysis-signal">{config.emoji}</span>
+    <div>
+      <div className="page-top">
+        <div>
+          <h2 className="page-title">공유 절약 시뮬레이터</h2>
+          <p className="page-desc">
+            혼자 쓰는 구독을 공유하면 얼마를 아끼는지 계산합니다
+          </p>
+        </div>
+      </div>
+
+      {/* 히어로 카드 */}
+      <div className="share-hero">
+        <div className="share-hero-top">
+          <div className="share-hero-icon">💸</div>
           <div>
-            <h4>{item.name}</h4>
-            <span className="sub-category-badge">{item.category}</span>
+            <div className="share-hero-label">
+              모두 공유하면 아낄 수 있는 금액
+            </div>
+            <div className="share-hero-amount">
+              월 {totalMonthly.toLocaleString()}원
+              <span className="share-hero-annual">
+                (연 {totalAnnual.toLocaleString()}원)
+              </span>
+            </div>
           </div>
         </div>
-        <div className={`analysis-verdict badge-${config.className}`}>
-          {config.label}
-        </div>
-      </div>
 
-      {/* ROI 게이지 */}
-      <div className="roi-gauge-section">
-        <div className="roi-gauge-labels">
-          <span>손해</span>
-          <span
-            className="roi-gauge-value"
-            style={{ color: `var(--color-${config.className})` }}
-          >
-            ROI {item.roi > 0 ? "+" : ""}
-            {item.roi}%
-          </span>
-          <span>이득</span>
-        </div>
-        <div className="roi-gauge-track">
-          <div className="roi-gauge-center"></div>
-          {gaugeWidth >= 0 ? (
-            <div
-              className="roi-gauge-fill roi-gauge-positive"
-              style={{ width: `${gaugeWidth / 2}%`, left: "50%" }}
-            ></div>
-          ) : (
-            <div
-              className="roi-gauge-fill roi-gauge-negative"
-              style={{ width: `${Math.abs(gaugeWidth) / 2}%`, right: "50%" }}
-            ></div>
-          )}
-        </div>
-      </div>
-
-      {/* 비용 분석 상세 */}
-      <div className="analysis-details">
-        <div className="detail-row">
-          <span>월 구독료</span>
-          <strong>{item.monthlyPrice.toLocaleString()}원</strong>
-        </div>
-        {item.usageCount > 0 ? (
-          <>
-            <div className="detail-row">
-              <span>이번 달 사용량</span>
-              <strong>
-                {item.usageCount}
-                {item.usageUnit}
-              </strong>
-            </div>
-            <div className="detail-row highlight">
-              <span>1{item.usageUnit}당 비용</span>
-              <strong>{item.costPerUse?.toLocaleString()}원</strong>
-            </div>
-            {item.marketUnitPrice > 0 && (
-              <div className="detail-row">
-                <span>{item.marketComparison} 가격</span>
-                <strong>
-                  {item.marketUnitPrice?.toLocaleString()}원/{item.usageUnit}
-                </strong>
+        {funItems.length > 0 && (
+          <div className="fun-row">
+            {funItems.map((it, i) => (
+              <div key={i} className="fun-tag">
+                <span>{it.emoji}</span>
+                {it.name} <strong>{it.count}번</strong>
               </div>
-            )}
-          </>
-        ) : (
-          <div className="detail-row highlight text-red">
-            <span>사용 기록</span>
-            <strong>없음 — 구독료 전액 낭비</strong>
+            ))}
           </div>
         )}
-        <div className="detail-row">
-          <span>연간 비용</span>
-          <strong>{item.annualCost?.toLocaleString()}원</strong>
-        </div>
       </div>
 
-      {/* 공유 최적화 제안 */}
-      {share?.available && share.currentUsers === 1 && (
-        <div className="share-suggestion">
-          <div className="share-suggestion-header">💡 공유하면?</div>
-          <div className="share-suggestion-body">
-            <p>
-              <strong>{share.maxUsers}명</strong> 공유 시 월{" "}
-              <strong className="text-green">
-                {share.sharedMonthlyPrice?.toLocaleString()}원
-              </strong>{" "}
-              (현재 대비{" "}
-              <strong className="text-green">
-                월 {share.monthlySavings?.toLocaleString()}원 절약
-              </strong>
-              )
-            </p>
-            <p className="share-annual">
-              → 연간 <strong>{share.annualSavings?.toLocaleString()}원</strong>{" "}
-              절감 가능
-            </p>
-          </div>
-        </div>
-      )}
+      {/* 2열 그리드 카드 */}
+      <div className="share-list">
+        {shareable
+          .sort(
+            (a, b) =>
+              (b.shareSimulation?.annualSavings || 0) -
+              (a.shareSimulation?.annualSavings || 0)
+          )
+          .map((item) => {
+            const sh = item.shareSimulation;
+            const needed = sh.maxUsers - sh.currentUsers;
+            const barPct = Math.round(
+              (sh.sharedMonthlyPrice / item.monthlyPrice) * 100
+            );
 
-      {/* 판정 메시지 */}
-      <div className={`analysis-verdict-msg verdict-${config.className}`}>
-        {item.verdict}
+            return (
+              <div key={item.id} className="share-card">
+                <h4>
+                  {item.name}
+                  <span className="badge badge-cat">{item.category}</span>
+                </h4>
+
+                {/* 비교 바 */}
+                <div className="share-compare">
+                  <div className="share-col">
+                    <div className="share-col-label">혼자 사용</div>
+                    <div className="share-col-price">
+                      {item.monthlyPrice.toLocaleString()}원<span>/월</span>
+                    </div>
+                    <div className="share-col-bar">
+                      <div
+                        className="share-col-bar-fill bar-red"
+                        style={{ width: "100%" }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div className="share-arrow">→</div>
+
+                  <div className="share-col">
+                    <div className="share-col-label">{sh.maxUsers}명 공유</div>
+                    <div className="share-col-price green">
+                      {sh.sharedMonthlyPrice?.toLocaleString()}원
+                      <span>/월</span>
+                    </div>
+                    <div className="share-col-bar">
+                      <div
+                        className="share-col-bar-fill bar-green"
+                        style={{ width: `${barPct}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="share-savings">
+                  <div className="save-row">
+                    <span>월 절감액</span>
+                    <strong className="green">
+                      -{sh.monthlySavings?.toLocaleString()}원
+                    </strong>
+                  </div>
+                  <div className="save-row">
+                    <span>연 절감액</span>
+                    <strong className="green">
+                      -{sh.annualSavings?.toLocaleString()}원
+                    </strong>
+                  </div>
+                  <div className="save-row">
+                    <span>필요 인원</span>
+                    <strong>+{needed}명 더 모집</strong>
+                  </div>
+                </div>
+
+                {item.usageCount > 0 && (
+                  <div className="share-unit-box">
+                    <div className="share-unit-row">
+                      <span>현재 1{item.usageUnit}당</span>
+                      <span>{item.costPerUse?.toLocaleString()}원</span>
+                    </div>
+                    <div className="share-unit-row green">
+                      <span>공유 시 1{item.usageUnit}당</span>
+                      <span>{sh.sharedCostPerUse?.toLocaleString()}원</span>
+                    </div>
+                    {sh.sharedRoi > 0 && item.marketComparison && (
+                      <div className="share-unit-verdict">
+                        📊 공유 시 {item.marketComparison} 대비 가성비 +
+                        {sh.sharedRoi}%
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
       </div>
     </div>
   );
 }
-
-export default ROIAnalysis;

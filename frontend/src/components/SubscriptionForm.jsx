@@ -9,9 +9,8 @@ const CATEGORIES = [
   "게임",
   "기타",
 ];
-const USAGE_UNITS = ["편", "시간", "회", "곡", "건"];
+const UNITS = ["편", "시간", "회", "곡", "건"];
 
-// 인기 서비스 프리셋 (빠른 입력용)
 const PRESETS = [
   {
     name: "넷플릭스 스탠다드",
@@ -115,7 +114,7 @@ const PRESETS = [
   },
 ];
 
-const initialForm = {
+const blank = {
   name: "",
   category: "OTT",
   monthlyPrice: "",
@@ -129,9 +128,9 @@ const initialForm = {
   startDate: new Date().toISOString().split("T")[0],
 };
 
-function SubscriptionForm({ initialData, onSave, onCancel }) {
-  const [form, setForm] = useState(initialForm);
-  const [showPresets, setShowPresets] = useState(false);
+export default function SubscriptionForm({ initialData, onSave, onCancel }) {
+  const [form, setForm] = useState(blank);
+  const [presetOpen, setPresetOpen] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -152,18 +151,19 @@ function SubscriptionForm({ initialData, onSave, onCancel }) {
     }
   }, [initialData]);
 
-  const handleChange = (e) => {
+  const numFields = [
+    "monthlyPrice",
+    "usageCount",
+    "marketUnitPrice",
+    "maxSharedUsers",
+    "currentSharedUsers",
+    "sharingPlanPrice",
+  ];
+  const set = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: [
-        "monthlyPrice",
-        "usageCount",
-        "marketUnitPrice",
-        "maxSharedUsers",
-        "currentSharedUsers",
-        "sharingPlanPrice",
-      ].includes(name)
+      [name]: numFields.includes(name)
         ? value === ""
           ? ""
           : Number(value)
@@ -171,18 +171,18 @@ function SubscriptionForm({ initialData, onSave, onCancel }) {
     }));
   };
 
-  const applyPreset = (preset) => {
+  const applyPreset = (p) => {
     setForm((prev) => ({
       ...prev,
-      ...preset,
+      ...p,
       usageCount: prev.usageCount,
       currentSharedUsers: prev.currentSharedUsers,
       startDate: prev.startDate,
     }));
-    setShowPresets(false);
+    setPresetOpen(false);
   };
 
-  const handleSubmit = (e) => {
+  const submit = (e) => {
     e.preventDefault();
     onSave({
       ...form,
@@ -196,69 +196,60 @@ function SubscriptionForm({ initialData, onSave, onCancel }) {
   };
 
   return (
-    <div className="form-overlay">
-      <form className="subscription-form" onSubmit={handleSubmit}>
-        <div className="form-header">
-          <h3>{initialData ? "구독 수정" : "새 구독 추가"}</h3>
-          <button type="button" className="btn-close" onClick={onCancel}>
-            ✕
+    <div className="form-card">
+      <div className="form-top">
+        <h3>{initialData ? "구독 수정" : "새 구독 추가"}</h3>
+        <button className="btn btn-ghost" onClick={onCancel}>
+          ✕
+        </button>
+      </div>
+
+      {!initialData && (
+        <div className="preset-row">
+          <button
+            className="btn btn-outline btn-sm"
+            onClick={() => setPresetOpen(!presetOpen)}
+          >
+            ⚡ 인기 서비스 빠른 입력
           </button>
+          {presetOpen && (
+            <div className="preset-chips">
+              {PRESETS.map((p, i) => (
+                <button
+                  key={i}
+                  className="preset-chip"
+                  onClick={() => applyPreset(p)}
+                >
+                  {p.name}{" "}
+                  <span className="price">
+                    {p.monthlyPrice.toLocaleString()}원
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+      )}
 
-        {!initialData && (
-          <div className="preset-section">
-            <button
-              type="button"
-              className="btn btn-outline btn-small"
-              onClick={() => setShowPresets(!showPresets)}
-            >
-              ⚡ 인기 서비스 빠른 입력
-            </button>
-            {showPresets && (
-              <div className="preset-list">
-                {PRESETS.map((p, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    className="preset-item"
-                    onClick={() => applyPreset(p)}
-                  >
-                    {p.name}
-                    <span className="preset-price">
-                      {p.monthlyPrice.toLocaleString()}원
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
+      <form onSubmit={submit}>
         <div className="form-section">
-          <h4>기본 정보</h4>
+          <div className="form-section-title">기본 정보</div>
           <div className="form-grid">
             <div className="form-group">
               <label>서비스명 *</label>
               <input
-                type="text"
                 name="name"
                 value={form.name}
-                onChange={handleChange}
+                onChange={set}
                 placeholder="예: 넷플릭스"
                 required
               />
             </div>
             <div className="form-group">
               <label>카테고리</label>
-              <select
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-              >
+              <select name="category" value={form.category} onChange={set}>
                 {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
+                  <option key={c}>{c}</option>
                 ))}
               </select>
             </div>
@@ -268,7 +259,7 @@ function SubscriptionForm({ initialData, onSave, onCancel }) {
                 type="number"
                 name="monthlyPrice"
                 value={form.monthlyPrice}
-                onChange={handleChange}
+                onChange={set}
                 placeholder="17000"
                 required
               />
@@ -279,14 +270,14 @@ function SubscriptionForm({ initialData, onSave, onCancel }) {
                 type="date"
                 name="startDate"
                 value={form.startDate}
-                onChange={handleChange}
+                onChange={set}
               />
             </div>
           </div>
         </div>
 
         <div className="form-section">
-          <h4>이용률 (ROI 계산용)</h4>
+          <div className="form-section-title">이용률 (가성비 계산용)</div>
           <div className="form-grid">
             <div className="form-group">
               <label>이번 달 사용 횟수</label>
@@ -294,22 +285,16 @@ function SubscriptionForm({ initialData, onSave, onCancel }) {
                 type="number"
                 name="usageCount"
                 value={form.usageCount}
-                onChange={handleChange}
+                onChange={set}
                 placeholder="5"
                 min="0"
               />
             </div>
             <div className="form-group">
               <label>사용 단위</label>
-              <select
-                name="usageUnit"
-                value={form.usageUnit}
-                onChange={handleChange}
-              >
-                {USAGE_UNITS.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
+              <select name="usageUnit" value={form.usageUnit} onChange={set}>
+                {UNITS.map((u) => (
+                  <option key={u}>{u}</option>
                 ))}
               </select>
             </div>
@@ -319,17 +304,16 @@ function SubscriptionForm({ initialData, onSave, onCancel }) {
                 type="number"
                 name="marketUnitPrice"
                 value={form.marketUnitPrice}
-                onChange={handleChange}
+                onChange={set}
                 placeholder="15000 (영화관 1회)"
               />
             </div>
             <div className="form-group">
               <label>비교 대상</label>
               <input
-                type="text"
                 name="marketComparison"
                 value={form.marketComparison}
-                onChange={handleChange}
+                onChange={set}
                 placeholder="영화관 관람"
               />
             </div>
@@ -337,7 +321,7 @@ function SubscriptionForm({ initialData, onSave, onCancel }) {
         </div>
 
         <div className="form-section">
-          <h4>공유 정보 (절감 계산용)</h4>
+          <div className="form-section-title">공유 정보 (절약 계산용)</div>
           <div className="form-grid">
             <div className="form-group">
               <label>최대 공유 인원</label>
@@ -345,7 +329,7 @@ function SubscriptionForm({ initialData, onSave, onCancel }) {
                 type="number"
                 name="maxSharedUsers"
                 value={form.maxSharedUsers}
-                onChange={handleChange}
+                onChange={set}
                 min="1"
               />
             </div>
@@ -355,17 +339,17 @@ function SubscriptionForm({ initialData, onSave, onCancel }) {
                 type="number"
                 name="currentSharedUsers"
                 value={form.currentSharedUsers}
-                onChange={handleChange}
+                onChange={set}
                 min="1"
               />
             </div>
-            <div className="form-group full-width">
+            <div className="form-group full">
               <label>공유 요금제 가격 (원)</label>
               <input
                 type="number"
                 name="sharingPlanPrice"
                 value={form.sharingPlanPrice}
-                onChange={handleChange}
+                onChange={set}
                 placeholder="23900 (가족 요금제)"
               />
             </div>
@@ -373,11 +357,7 @@ function SubscriptionForm({ initialData, onSave, onCancel }) {
         </div>
 
         <div className="form-actions">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={onCancel}
-          >
+          <button type="button" className="btn btn-outline" onClick={onCancel}>
             취소
           </button>
           <button type="submit" className="btn btn-primary">
@@ -388,5 +368,3 @@ function SubscriptionForm({ initialData, onSave, onCancel }) {
     </div>
   );
 }
-
-export default SubscriptionForm;
