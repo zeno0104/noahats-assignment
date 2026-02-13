@@ -1329,3 +1329,110 @@ body {
     font-size: 1.2rem;
   }
 }
+
+/* ============================================
+   App.css 맨 하단에 이 코드를 추가하세요!
+   기존 CSS는 건드리지 않아도 됩니다.
+   ============================================ */
+
+/* ============ Inline Edit (카드 내 수정 폼) ============ */
+.sub-card.border-edit {
+  border-top: 3px solid var(--accent);
+  background: #fafcff;
+}
+
+.ie-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.ie-section {
+  padding-bottom: 0.5rem;
+}
+
+.ie-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.ie-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.ie-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.ie-group.ie-full {
+  grid-column: 1 / -1;
+}
+
+.ie-group label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.ie-group input,
+.ie-group select {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  transition: border-color 0.15s;
+  background: white;
+}
+
+.ie-group input:focus,
+.ie-group select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.1);
+}
+
+.ie-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--border-light);
+}
+/* App.css 맨 아래에 추가 */
+.preset-panel {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 5px;
+}
+.preset-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 5px;
+}
+.preset-chip.custom {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+.del-btn {
+  margin-left: 5px;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.del-btn:hover {
+  color: #ef4444;
+}

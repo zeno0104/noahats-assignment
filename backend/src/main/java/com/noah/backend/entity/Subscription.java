@@ -10,22 +10,23 @@ public class Subscription {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	private String name; // 구독 서비스명 (넷플릭스, 유튜브 등)
-	private String category; // 카테고리 (OTT, 음악, 클라우드, 생산성, 게임, 기타)
-	private int monthlyPrice; // 월 구독료 (원)
-	private int usageCount; // 이번 달 사용 횟수
-	private String usageUnit; // 사용 단위 (편, 시간, 회)
-	private int marketUnitPrice; // 시장 단건 가격 (영화관 15000원 등)
-	private String marketComparison; // 비교 대상명 (영화관, 음원구매, PC방 등)
-	private int maxSharedUsers; // 최대 공유 가능 인원
-	private int currentSharedUsers; // 현재 공유 인원 (1 = 혼자 사용)
-	private int sharingPlanPrice; // 공유 요금제 가격 (없으면 0)
-	private String startDate; // 구독 시작일 (yyyy-MM-dd)
+	private String name;
+	private String category;
+
+	private String currency = "KRW"; // 화폐 단위 (KRW/USD)
+
+	private int monthlyPrice;
+	private int usageCount;
+	private String usageUnit;
+	private int targetUsageCount;
+	private int maxSharedUsers;
+	private int currentSharedUsers;
+	private int sharingPlanPrice;
+	private String startDate;
 
 	public Subscription() {
 	}
 
-	// Getters and Setters
 	public Long getId() {
 		return id;
 	}
@@ -48,6 +49,14 @@ public class Subscription {
 
 	public void setCategory(String category) {
 		this.category = category;
+	}
+
+	public String getCurrency() {
+		return currency;
+	}
+
+	public void setCurrency(String currency) {
+		this.currency = currency;
 	}
 
 	public int getMonthlyPrice() {
@@ -74,20 +83,12 @@ public class Subscription {
 		this.usageUnit = usageUnit;
 	}
 
-	public int getMarketUnitPrice() {
-		return marketUnitPrice;
+	public int getTargetUsageCount() {
+		return targetUsageCount;
 	}
 
-	public void setMarketUnitPrice(int marketUnitPrice) {
-		this.marketUnitPrice = marketUnitPrice;
-	}
-
-	public String getMarketComparison() {
-		return marketComparison;
-	}
-
-	public void setMarketComparison(String marketComparison) {
-		this.marketComparison = marketComparison;
+	public void setTargetUsageCount(int targetUsageCount) {
+		this.targetUsageCount = targetUsageCount;
 	}
 
 	public int getMaxSharedUsers() {

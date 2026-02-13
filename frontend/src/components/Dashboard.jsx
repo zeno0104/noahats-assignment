@@ -14,7 +14,7 @@ export default function Dashboard({ dashboard, analyses }) {
   if (!dashboard)
     return (
       <div className="loading">
-        <p>대시보드 로딩 중...</p>
+        <p>로딩 중...</p>
       </div>
     );
 
@@ -37,7 +37,7 @@ export default function Dashboard({ dashboard, analyses }) {
     () =>
       analyses
         .filter((a) => a.signal === "RED")
-        .sort((a, b) => b.monthlyPrice - a.monthlyPrice),
+        .sort((a, b) => a.score - b.score),
     [analyses]
   );
 
@@ -45,14 +45,13 @@ export default function Dashboard({ dashboard, analyses }) {
     () =>
       analyses
         .filter((a) => a.signal === "GREEN")
-        .sort((a, b) => b.roi - a.roi)
+        .sort((a, b) => b.score - a.score)
         .slice(0, 3),
     [analyses]
   );
 
   return (
     <div className="dashboard">
-      {/* 요약 카드 */}
       <div className="dash-summary">
         <div className="dash-card">
           <div className="dash-card-label">월 구독비 합계</div>
@@ -64,56 +63,56 @@ export default function Dashboard({ dashboard, analyses }) {
           </div>
         </div>
         <div className="dash-card accent">
-          <div className="dash-card-label">절약 가능액 (연간)</div>
+          <div className="dash-card-label">공유 절약 가능액</div>
           <div className="dash-card-value">
             {dashboard.totalPossibleAnnualSavings?.toLocaleString()}원
           </div>
-          <div className="dash-card-sub">공유 최적화 적용 시</div>
+          <div className="dash-card-sub">파티원 모집 시 (연간)</div>
         </div>
         <div className="dash-card">
-          <div className="dash-card-label">하루 평균 구독비</div>
-          <div className="dash-card-value">
+          <div className="dash-card-label">구독 개수</div>
+          <div className="dash-card-value">{dashboard.subscriptionCount}개</div>
+          <div className="dash-card-sub">
+            평균{" "}
             {dashboard.totalMonthlySpending
-              ? Math.round(dashboard.totalMonthlySpending / 30).toLocaleString()
+              ? Math.round(
+                  dashboard.totalMonthlySpending / dashboard.subscriptionCount
+                ).toLocaleString()
               : 0}
             원
-          </div>
-          <div className="dash-card-sub">
-            총 {dashboard.subscriptionCount}개 구독 운영 중
           </div>
         </div>
       </div>
 
-      {/* 신호등 요약 */}
       <div className="signal-bars">
         <div className="signal-bar">
           <div className="signal-indicator green">🟢</div>
           <div>
             <div className="signal-count">{signals.green}</div>
-            <div className="signal-name">유지 (본전 이상)</div>
+            <div className="signal-name">적극 활용</div>
           </div>
         </div>
         <div className="signal-bar">
           <div className="signal-indicator amber">🟡</div>
           <div>
             <div className="signal-count">{signals.yellow}</div>
-            <div className="signal-name">공유하면 이득</div>
+            <div className="signal-name">적정 사용</div>
           </div>
         </div>
         <div className="signal-bar">
           <div className="signal-indicator red">🔴</div>
           <div>
             <div className="signal-count">{signals.red}</div>
-            <div className="signal-name">해지 권장</div>
+            <div className="signal-name">분발 필요</div>
           </div>
         </div>
       </div>
 
-      {/* 2열 그리드 */}
       <div className="dash-grid">
-        {/* 카테고리별 */}
         <div className="dash-section">
-          <div className="dash-section-title">📂 카테고리별 지출</div>
+          <div className="dash-section-title">
+            📂 카테고리별 지출 (원화 기준)
+          </div>
           {categoryData.map((item) => (
             <div key={item.category} className="cat-row">
               <div className="cat-row-top">
@@ -138,19 +137,18 @@ export default function Dashboard({ dashboard, analyses }) {
           ))}
         </div>
 
-        {/* 주의/추천 */}
         <div className="dash-section">
           {redItems.length > 0 && (
             <>
-              <div className="dash-section-title">🚨 해지 추천</div>
+              <div className="dash-section-title">🚨 해지 검토 (목표 미달)</div>
               {redItems.map((item) => (
                 <div key={item.id} className="alert-item red">
                   <div className="alert-name">{item.name}</div>
                   <div className="alert-detail">
-                    월 {item.monthlyPrice.toLocaleString()}원 ·{" "}
+                    월 {item.monthlyPrice.toLocaleString()}원 ·
                     {item.usageCount === 0
-                      ? "사용 기록 없음"
-                      : `가성비 점수 ${item.roi}%`}
+                      ? " 미사용"
+                      : ` 목표 달성률 ${item.score}%`}
                   </div>
                 </div>
               ))}
@@ -163,24 +161,18 @@ export default function Dashboard({ dashboard, analyses }) {
                 className="dash-section-title"
                 style={{ marginTop: redItems.length > 0 ? "1rem" : 0 }}
               >
-                🏆 가성비 최고
+                🏆 베스트 활용
               </div>
               {topValue.map((item) => (
                 <div key={item.id} className="alert-item green">
                   <div className="alert-name">{item.name}</div>
                   <div className="alert-detail">
-                    가성비 +{item.roi}% · 1{item.usageUnit}당{" "}
+                    목표 달성률 {item.score}% · 1{item.usageUnit}당{" "}
                     {item.costPerUse?.toLocaleString()}원
                   </div>
                 </div>
               ))}
             </>
-          )}
-
-          {redItems.length === 0 && topValue.length === 0 && (
-            <div className="empty">
-              <p>분석할 구독을 추가해주세요</p>
-            </div>
           )}
         </div>
       </div>

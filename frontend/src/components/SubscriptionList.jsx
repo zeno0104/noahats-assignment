@@ -1,7 +1,11 @@
-const SIGNAL_MAP = {
-  GREEN: { emoji: "🟢", label: "유지", cls: "green" },
-  YELLOW: { emoji: "🟡", label: "공유 권장", cls: "amber" },
-  RED: { emoji: "🔴", label: "해지 권장", cls: "red" },
+import { useState } from "react";
+import SubscriptionForm from "./SubscriptionForm";
+
+const SIG = {
+  GREEN: { emoji: "🟢", label: "적극 활용 중", c: "green" },
+  YELLOW: { emoji: "🟡", label: "적정 수준", c: "amber" },
+  RED: { emoji: "🔴", label: "활용도 낮음", c: "red" },
+  GRAY: { emoji: "⚪", label: "목표 미설정", c: "gray" },
 };
 
 export default function SubscriptionList({
@@ -10,42 +14,51 @@ export default function SubscriptionList({
   onEdit,
   onDelete,
 }) {
-  if (subscriptions.length === 0) {
+  const [editingId, setEditingId] = useState(null);
+  if (!subscriptions.length)
     return (
       <div className="empty">
-        <div className="empty-icon">📭</div>
-        <p>등록된 구독이 없습니다</p>
-        <p className="sub-text">"구독 추가" 버튼으로 시작하세요</p>
+        <p>등록된 구독이 없습니다.</p>
       </div>
     );
-  }
 
-  const getAnalysis = (id) => analyses.find((a) => a.id === id);
+  const getA = (id) => analyses.find((a) => a.id === id);
 
   return (
     <div className="sub-grid">
       {subscriptions.map((sub) => {
-        const a = getAnalysis(sub.id);
-        const sig = SIGNAL_MAP[a?.signal] || {
-          emoji: "⚪",
-          label: "",
-          cls: "",
-        };
+        const a = getA(sub.id);
+        const isTargetZero =
+          !sub.targetUsageCount || sub.targetUsageCount === 0;
+        const s = isTargetZero ? SIG.GRAY : SIG[a?.signal] || SIG.GRAY;
+        const isUsd = sub.currency === "USD";
+
+        if (editingId === sub.id) {
+          return (
+            <div key={sub.id} className="sub-card-edit-wrapper">
+              <SubscriptionForm
+                initialData={sub}
+                onSave={(updated) => {
+                  onEdit(updated);
+                  setEditingId(null);
+                }}
+                onCancel={() => setEditingId(null)}
+              />
+            </div>
+          );
+        }
 
         return (
-          <div key={sub.id} className={`sub-card border-${sig.cls}`}>
-            {/* 상단: 이름 + 신호 + 버튼 */}
+          <div key={sub.id} className={`sub-card border-${s.c}`}>
             <div className="sub-card-top">
               <div className="sub-card-info">
-                <div className={`sub-signal-dot ${sig.cls}`}>{sig.emoji}</div>
+                <div className={`sub-signal-dot ${s.c}`}>{s.emoji}</div>
                 <div>
                   <div className="sub-name">{sub.name}</div>
                   <div className="sub-badges">
                     <span className="badge badge-cat">{sub.category}</span>
-                    {sig.label && (
-                      <span className={`badge badge-signal badge-${sig.cls}`}>
-                        {sig.label}
-                      </span>
+                    {s.label && (
+                      <span className={`badge badge-${s.c}`}>{s.label}</span>
                     )}
                   </div>
                 </div>
@@ -53,7 +66,7 @@ export default function SubscriptionList({
               <div className="sub-actions">
                 <button
                   className="btn btn-outline btn-sm"
-                  onClick={() => onEdit(sub)}
+                  onClick={() => setEditingId(sub.id)}
                 >
                   수정
                 </button>
@@ -66,24 +79,35 @@ export default function SubscriptionList({
               </div>
             </div>
 
-            {/* 핵심 수치 4개 */}
             <div className="sub-stats">
               <div className="sub-stat">
                 <div className="sub-stat-label">월 구독료</div>
                 <div className="sub-stat-value">
-                  {sub.monthlyPrice.toLocaleString()}원
+                  {isUsd
+                    ? `$${sub.monthlyPrice.toLocaleString()}`
+                    : `${sub.monthlyPrice.toLocaleString()}원`}
+                  {isUsd && a?.convertedPrice && (
+                    <div
+                      style={{
+                        fontSize: "0.65rem",
+                        fontWeight: "400",
+                        color: "#64748b",
+                      }}
+                    >
+                      ≈ {a.convertedPrice.toLocaleString()}원
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="sub-stat">
-                <div className="sub-stat-label">이번 달 사용</div>
+                <div className="sub-stat-label">사용 / 목표</div>
                 <div className="sub-stat-value">
-                  {sub.usageCount > 0
-                    ? `${sub.usageCount}${sub.usageUnit}`
-                    : "미사용"}
+                  {sub.usageCount} / {sub.targetUsageCount || "?"}
+                  {sub.usageUnit}
                 </div>
               </div>
               <div className="sub-stat">
-                <div className="sub-stat-label">1{sub.usageUnit}당 비용</div>
+                <div className="sub-stat-label">1{sub.usageUnit}당 체감가</div>
                 <div className="sub-stat-value">
                   {a?.costPerUse > 0
                     ? `${a.costPerUse.toLocaleString()}원`
@@ -91,51 +115,21 @@ export default function SubscriptionList({
                 </div>
               </div>
               <div className="sub-stat">
-                <div className="sub-stat-label">
-                  가성비 점수{" "}
-                  <span
-                    className="info-tip"
-                    data-tip="시장가 대비 절약률. 높을수록 이득!"
-                  >
-                    ⓘ
-                  </span>
-                </div>
-                <div
-                  className={`sub-stat-value ${a?.roi >= 0 ? "green" : "red"}`}
-                >
-                  {a?.usageCount > 0 && a?.roi !== undefined
-                    ? `${a.roi > 0 ? "+" : ""}${a.roi}%`
-                    : "—"}
+                <div className="sub-stat-label">목표 달성률</div>
+                <div className={`sub-stat-value ${s.c}`}>
+                  {sub.targetUsageCount ? `${a?.score}%` : "설정 필요"}
                 </div>
               </div>
             </div>
-
-            {/* 비교 팁 */}
-            {a?.marketComparison && a.usageCount > 0 && (
-              <div className="sub-tip">
-                💡 {a.marketComparison}({a.marketUnitPrice?.toLocaleString()}원)
-                대비{" "}
-                {a.roi >= 0 ? (
-                  <strong className="green">
-                    {sub.usageUnit}당{" "}
-                    {(a.marketUnitPrice - a.costPerUse).toLocaleString()}원 절약
-                  </strong>
-                ) : (
-                  <strong className="red">
-                    {sub.usageUnit}당{" "}
-                    {(a.costPerUse - a.marketUnitPrice).toLocaleString()}원 더
-                    비쌈
-                  </strong>
-                )}
-              </div>
-            )}
-
-            {a?.usageCount === 0 && (
-              <div className="sub-tip">
-                ⚠️ 이번 달 사용 기록이 없습니다. 월{" "}
-                {sub.monthlyPrice.toLocaleString()}원이 그대로 낭비되고 있어요.
-              </div>
-            )}
+            <div className="sub-tip">
+              {!sub.targetUsageCount
+                ? "⚙️ [수정]을 눌러 목표를 설정하세요."
+                : a?.score >= 100
+                ? "🎉 목표 달성! 아주 잘 활용하고 계시네요."
+                : `💪 ${sub.targetUsageCount - sub.usageCount}${
+                    sub.usageUnit
+                  } 더 쓰면 목표 달성!`}
+            </div>
           </div>
         );
       })}

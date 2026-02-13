@@ -5,9 +5,11 @@ import SubscriptionForm from "./components/SubscriptionForm";
 import ROIAnalysis from "./components/ROIAnalysis";
 import ShareSimulator from "./components/ShareSimulator";
 import "./App.css";
-const API_BASE =
-  import.meta.env.VITE_API_URL || "http://localhost:8080/api/subscriptions";
-
+// const API_BASE =
+//   import.meta.env.VITE_API_URL || "http://localhost:8080/api/subscriptions";
+// 🚨 주의: 테스트할 때는 반드시 localhost를 사용해야 새 기능이 먹힙니다!
+const API_BASE = "http://localhost:8080/api/subscriptions";
+// 기존 코드: import.meta.env.VITE_API_URL || ... (이거 잠시 주석 처리하세요)
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [subscriptions, setSubscriptions] = useState([]);
@@ -65,11 +67,17 @@ function App() {
       console.error("삭제 실패:", err);
     }
   };
-
-  const handleEdit = (subscription) => {
-    setEditingItem(subscription);
-    setShowForm(true);
-    setActiveTab("subscriptions");
+  const handleEdit = async (data) => {
+    try {
+      await fetch(`${API_BASE}/${data.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      await fetchData();
+    } catch (err) {
+      console.error("수정 실패:", err);
+    }
   };
 
   const tabs = [
