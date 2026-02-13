@@ -84,7 +84,10 @@ export default function SubscriptionList({
                 <div className="sub-stat-label">월 구독료</div>
                 <div className="sub-stat-value">
                   {isUsd
-                    ? `$${sub.monthlyPrice.toLocaleString()}`
+                    ? `$${sub.monthlyPrice.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`
                     : `${sub.monthlyPrice.toLocaleString()}원`}
                   {isUsd && a?.convertedPrice && (
                     <div

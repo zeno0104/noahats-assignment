@@ -13,15 +13,18 @@ public class Subscription {
 	private String name;
 	private String category;
 
-	private String currency = "KRW"; // 화폐 단위 (KRW/USD)
+	private String currency = "KRW";
 
-	private int monthlyPrice;
+	private double monthlyPrice;
+
 	private int usageCount;
 	private String usageUnit;
 	private int targetUsageCount;
 	private int maxSharedUsers;
 	private int currentSharedUsers;
-	private int sharingPlanPrice;
+
+	private double sharingPlanPrice;
+
 	private String startDate;
 
 	public Subscription() {
@@ -59,11 +62,11 @@ public class Subscription {
 		this.currency = currency;
 	}
 
-	public int getMonthlyPrice() {
+	public double getMonthlyPrice() {
 		return monthlyPrice;
 	}
 
-	public void setMonthlyPrice(int monthlyPrice) {
+	public void setMonthlyPrice(double monthlyPrice) {
 		this.monthlyPrice = monthlyPrice;
 	}
 
@@ -107,11 +110,11 @@ public class Subscription {
 		this.currentSharedUsers = currentSharedUsers;
 	}
 
-	public int getSharingPlanPrice() {
+	public double getSharingPlanPrice() {
 		return sharingPlanPrice;
 	}
 
-	public void setSharingPlanPrice(int sharingPlanPrice) {
+	public void setSharingPlanPrice(double sharingPlanPrice) {
 		this.sharingPlanPrice = sharingPlanPrice;
 	}
 

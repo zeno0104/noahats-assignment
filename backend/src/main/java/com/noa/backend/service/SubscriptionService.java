@@ -32,8 +32,8 @@ public class SubscriptionService {
 		repository.deleteById(id);
 	}
 
-	private int toWon(int price, String currency) {
-		return "USD".equals(currency) ? (int) Math.round(price * currencyService.getUsdToKrwRate()) : price;
+	private int toWon(double price, String currency) {
+		return "USD".equals(currency) ? (int) Math.round(price * currencyService.getUsdToKrwRate()) : (int) price;
 	}
 
 	public Map<String, Object> analyzeSubscription(Subscription sub) {

@@ -118,6 +118,7 @@ export default function SubscriptionForm({ initialData, onSave, onCancel }) {
               </label>
               <input
                 type="number"
+                step="0.01"
                 name="monthlyPrice"
                 value={form.monthlyPrice}
                 onChange={set}
@@ -201,6 +202,7 @@ export default function SubscriptionForm({ initialData, onSave, onCancel }) {
               </label>
               <input
                 type="number"
+                step="0.01"
                 name="sharingPlanPrice"
                 value={form.sharingPlanPrice}
                 onChange={set}
