@@ -79,8 +79,10 @@ npm run dev
 
 브라우저에서 http://localhost:5173 접속 후 서비스를 이용합니다.
 
-만약 로컬에서 기능이 제대로 동작하지 않는다면 
-App.jsx에서 9번 줄에 있는 const API_BASE에 http://localhost:8080/api/subscriptions만 넣어주시면 됩니다!
+🚨 주의사항
+<pre>만약 로컬에서 기능이 제대로 동작하지 않는다면 
+App.jsx에서 9번 줄에 있는 const API_BASE에 http://localhost:8080/api/subscriptions만 넣어주시면 됩니다!</pre>
+
 ---
 
 ## 📊 핵심 로직 설명
