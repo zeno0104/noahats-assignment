@@ -38,6 +38,7 @@ export default function SubscriptionForm({ initialData, onSave, onCancel }) {
       .catch(() => {});
 
     if (initialData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({ ...initialData, currency: initialData.currency || "KRW" });
     }
   }, [initialData]);
