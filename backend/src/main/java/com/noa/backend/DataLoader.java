@@ -16,13 +16,9 @@ public class DataLoader implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		// 데이터가 이미 있으면 실행하지 않음 (중복 방지)
 		if (repository.count() > 0)
 			return;
 
-		System.out.println("🚀 초기 데이터 적재 시작...");
-
-		// 1. 넷플릭스
 		Subscription s1 = new Subscription();
 		s1.setName("넷플릭스 스탠다드");
 		s1.setCategory("OTT");
@@ -37,7 +33,6 @@ public class DataLoader implements CommandLineRunner {
 		s1.setStartDate("2024-03-01");
 		repository.save(s1);
 
-		// 2. 유튜브
 		Subscription s2 = new Subscription();
 		s2.setName("유튜브 프리미엄");
 		s2.setCategory("영상");
@@ -52,12 +47,11 @@ public class DataLoader implements CommandLineRunner {
 		s2.setStartDate("2023-12-15");
 		repository.save(s2);
 
-		// 3. ChatGPT (소수점 테스트용: $23.23 입력해봄)
 		Subscription s3 = new Subscription();
 		s3.setName("ChatGPT Plus");
 		s3.setCategory("생산성");
 		s3.setCurrency("USD");
-		s3.setMonthlyPrice(23.23); // ✨ 소수점 값이 확실히 들어갑니다!
+		s3.setMonthlyPrice(23.23);
 		s3.setUsageCount(45);
 		s3.setUsageUnit("회");
 		s3.setTargetUsageCount(50);
@@ -67,7 +61,6 @@ public class DataLoader implements CommandLineRunner {
 		s3.setStartDate("2024-01-05");
 		repository.save(s3);
 
-		// 4. Adobe
 		Subscription s4 = new Subscription();
 		s4.setName("Adobe Creative Cloud");
 		s4.setCategory("생산성");
@@ -82,6 +75,5 @@ public class DataLoader implements CommandLineRunner {
 		s4.setStartDate("2023-11-20");
 		repository.save(s4);
 
-		System.out.println("✅ 초기 데이터 적재 완료!");
 	}
 }
