@@ -98,7 +98,6 @@ App.jsx에서 9번 줄에 있는 const API_BASE에 http://localhost:8080/api/sub
 | 🟢 GREEN | 활용 지수 ≥ 100% | 적극 활용 중 |
 | 🟡 YELLOW | 50% ≤ 활용 지수 < 100% | 적정 수준 |
 | 🔴 RED | 활용 지수 < 50% 또는 미사용 | 활용도 낮음 |
-| ⚪ GRAY | 목표 미설정 | 설정 필요 |
 
 ### 실시간 환율 변환
 
