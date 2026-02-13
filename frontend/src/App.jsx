@@ -6,7 +6,9 @@ import UsageReport from "./components/UsageReport";
 import ShareSimulator from "./components/ShareSimulator";
 import "./App.css";
 // const API_BASE =
-const API_BASE = "http://localhost:8080/api/subscriptions";
+const API_BASE =
+  "https://noaats-assignment-ajh.onrender.com/api/subscriptions" ||
+  "http://localhost:8080/api/subscriptions";
 
 // 만약 로컬에서 기능이 제대로 동작하지 않는다면
 // const API_BASE에 http://localhost:8080/api/subscriptions만 넣어주시면 됩니다!
