@@ -146,17 +146,9 @@ root/
 
 ## 📮 과제 제출 정보
 
-<<<<<<< HEAD
 | 항목          | 내용                                                      |
 | ------------- | --------------------------------------------------------- |
 | 주제          | 6. 구독 서비스 관리 (구독 비용 분석, 공유 최적화, 이용률) |
-| Frontend 배포 | https://noaats-assignment-8kbi.vercel.app/                |
-| Backend 배포  | https://noaats-assignment.onrender.com                    |
-=======
-| 항목 | 내용 |
-|------|------|
-| 주제 | 6. 구독 서비스 관리 (구독 비용 분석, 공유 최적화, 이용률) |
-| Frontend 배포 | https://noahats-assignment.vercel.app/ |
-| Backend 배포 | https://noahats-assignment.onrender.com |
-| Notion | https://stream-chopper-e5d.notion.site/_-3043121c234280309894dc41939d9dc0 |
->>>>>>> a9acf228e617aa2bc0dd98a8d94cfdbff0a8ee97
+| Frontend 배포 | https://noaats-assignment-plum.vercel.app/                |
+| Backend 배포  | https://noaats-assignment-ajh.onrender.com/                    |
+| 기획서 및 개발문서 | https://stream-chopper-e5d.notion.site/_-3043121c234280309894dc41939d9dc0 |
